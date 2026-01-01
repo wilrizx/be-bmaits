@@ -31,4 +31,6 @@ return [
 
     'supports_credentials' => true,
 
+    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost:3000')),
+
 ];
