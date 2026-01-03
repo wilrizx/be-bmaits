@@ -15,14 +15,22 @@ class LoginController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $user = Auth::user();
+        if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
+            $user = Auth::guard('web')->user();
+            
+            $user->tokens()->delete();
+            
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
+                'message' => 'Login successful',
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                ],
                 'access_token' => $token,
                 'token_type' => 'Bearer',
-            ]);
+            ], 200);
         }
     }
 
@@ -32,6 +40,6 @@ class LoginController extends Controller
 
         return response()->json([
             'message' => 'Successfully logged out',
-        ]);
+        ], 200);
     }
 }
