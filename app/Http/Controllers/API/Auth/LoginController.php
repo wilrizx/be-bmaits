@@ -32,6 +32,10 @@ class LoginController extends Controller
                 'token_type' => 'Bearer',
             ], 200);
         }
+
+        return response()->json([
+            'message' => 'The provided credentials are incorrect.',
+        ], 401);
     }
 
     public function destroy(Request $request)

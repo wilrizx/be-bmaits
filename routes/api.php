@@ -14,7 +14,7 @@ Route::get('/user', function (Request $request) {
 // admin auth routes
 Route::prefix('v1')->group(function () {
     Route::prefix('adminbma')->group(function () {
-        Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
+        Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
         Route::delete('/logout', [LoginController::class, 'destroy'])->middleware('auth:sanctum');
     });
 });
