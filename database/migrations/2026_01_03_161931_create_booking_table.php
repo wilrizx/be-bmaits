@@ -20,8 +20,8 @@ return new class extends Migration
             $table->dateTime('tanggal_pinjam');
             $table->dateTime('tanggal_kembali');
             $table->text('keperluan');
-            $table->enum('status_booking', ['pending', 'disetujui', 'ditolak'])->default('pending');
-            $table->timestamps();
+            $table->enum('status_pengajuan', ['disetujui', 'menunggu', 'ditolak'])->default('menunggu');
+            $table->timestamps();  
         });
     }
 

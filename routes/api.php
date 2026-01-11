@@ -21,7 +21,19 @@ Route::prefix('v1')->group(function () {
 
 Route::prefix('booking')->group(function () {
         Route::post('/', [BookingController::class, 'store'])
-            ->middleware('throttle:10,1'); // Max 10 submissions per minute
+            ->middleware('throttle:10,1');
         Route::get('/check/{nrp}', [BookingController::class, 'checkByNrp']);
-        Route::get('/', [BookingController::class, 'index']); // For testing
+        Route::get('/', [BookingController::class, 'index']);
+        
+        // Routes untuk jadwal kendaraan
+        Route::get('/approved', [BookingController::class, 'getApprovedBookings']);
+        Route::get('/vehicle/{vehicleId}', [BookingController::class, 'getBookingsByVehicle']);
+        Route::get('/schedule', [BookingController::class, 'getBookingsByDateRange']);
     });
+
+Route::prefix('admin/booking')->middleware('auth:sanctum')->group(function () {
+        Route::put('/{id}/approve', [BookingController::class, 'approve']);
+        Route::put('/{id}/reject', [BookingController::class, 'reject']);
+    });
+
+    

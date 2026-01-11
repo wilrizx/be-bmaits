@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('warna_kendaraan');
             $table->string('bahan_bakar');
             $table->integer('kapasitas_penumpang');
-            $table->enum('status_ketersediaan', ['tersedia', 'dipinjam'])->default('tersedia');
+            $table->enum('status_ketersediaan', ['tersedia', 'dipinjam', 'maintenance'])->default('tersedia');
             $table->timestamps();
         });
     }
