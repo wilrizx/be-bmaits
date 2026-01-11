@@ -38,6 +38,13 @@ class LoginController extends Controller
         ], 401);
     }
 
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
+        ], 200);
+    }
+
     public function destroy(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

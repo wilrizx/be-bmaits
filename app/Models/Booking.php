@@ -21,8 +21,19 @@ class Booking extends Model
     ];
     
     protected $casts = [
+        'nrp' => 'integer',
+        'vehicle_id' => 'integer',
         'tanggal_peminjaman' => 'date',
         'tanggal_kembali' => 'date',
     ];
+
+    /**
+     * Relationship dengan Vehicle
+     * Satu booking dimiliki oleh satu kendaraan
+     */
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
     //
 }
