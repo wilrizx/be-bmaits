@@ -30,7 +30,9 @@ class LoginController extends Controller
                 ],
                 'access_token' => $token,
                 'token_type' => 'Bearer',
-            ], 200);
+            ], 200)
+            ->header('Access-Control-Allow-Origin', 'http://localhost:3000');
+
         }
 
         return response()->json([

@@ -56,4 +56,3 @@ Route::prefix('admin/booking')->middleware('auth:sanctum')->group(function () {
         Route::put('/{id}/reject', [BookingController::class, 'reject']);
     });
 
-    
