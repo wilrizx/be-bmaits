@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Vehicle;
+use Carbon\Carbon;
 
 class VehicleSeeder extends Seeder
 {
@@ -13,6 +14,8 @@ class VehicleSeeder extends Seeder
      */
     public function run(): void
     {
+        $now = Carbon::now();
+        
         $vehicles = [
             [
                 'nama_kendaraan' => 'BUS MANDIRI',
@@ -22,6 +25,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 35,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'BUS BNI',
@@ -31,6 +36,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 28,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'BUS SPS',
@@ -40,6 +47,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 28,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'BUS IKOMA',
@@ -49,6 +58,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 27,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'HAICE',
@@ -58,6 +69,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 14,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'HYUNDAI',
@@ -67,15 +80,19 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'SEDAN VIOS XSK ITS',
                 'jenis_kendaraan' => 'Sedan',
-                'nomor_polisi' => 'L 1069 OE',
+                'nomor_polisi' => 'L 1069 OD',
                 'warna_kendaraan' => 'Hitam',
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 3,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'SEDAN ALTIS XWR4',
@@ -85,6 +102,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 3,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'SEDAN ALTIS XWR3',
@@ -94,6 +113,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 3,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'INNOVA XDPP',
@@ -103,6 +124,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Dexlite',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'INNOVA XFTSPK',
@@ -112,6 +135,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'INNOVA X ELEKTRO',
@@ -121,6 +146,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'INNOVA XDRPM',
@@ -130,6 +157,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'AVANZA XDKG',
@@ -139,6 +168,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'AVANZA X INFORMATIKA',
@@ -148,6 +179,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'AVANZA XBURB',
@@ -157,6 +190,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'AVANZA XBK',
@@ -166,6 +201,8 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'nama_kendaraan' => 'AVANZA XBSP',
@@ -175,12 +212,13 @@ class VehicleSeeder extends Seeder
                 'bahan_bakar' => 'Pertamax',
                 'kapasitas_penumpang' => 5,
                 'status_ketersediaan' => 'tersedia',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ];
 
-        foreach ($vehicles as $vehicle) {
-            Vehicle::create($vehicle);
-        }
-        //
+        Vehicle::insert($vehicles);
+        
+        $this->command->info('✅ 18 kendaraan berhasil ditambahkan!');
     }
 }

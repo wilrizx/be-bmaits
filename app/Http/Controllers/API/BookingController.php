@@ -11,7 +11,6 @@ class BookingController extends Controller
 {
     public function getAvailableVehicles(Request $request)
     {
-
         $request->validate([
             'tanggal_peminjaman' => 'required|date|after_or_equal:today',
             'tanggal_kembali' => 'required|date|after:tanggal_peminjaman',
@@ -20,23 +19,20 @@ class BookingController extends Controller
         $tanggalPinjam = $request->tanggal_peminjaman;
         $tanggalKembali = $request->tanggal_kembali;
 
-        // Ambil semua kendaraan dari database
         $allVehicles = Vehicle::all();
 
-        // Cari vehicle_id yang SEDANG dipinjam (overlap dengan range tanggal)
         $bookedVehicleIds = Booking::where(function ($query) use ($tanggalPinjam, $tanggalKembali) {
-            // Kondisi overlap: booking lama yang bentrok dengan tanggal baru
             $query->where('tanggal_peminjaman', '<=', $tanggalKembali)
-                  ->where('tanggal_kembali', '>=', $tanggalPinjam);
+                ->where('tanggal_kembali', '>=', $tanggalPinjam);
         })
-        ->whereIn('status_peminjaman', ['menunggu', 'disetujui']) // Hanya yang aktif
+        ->whereIn('status_peminjaman', ['menunggu', 'disetujui'])
         ->pluck('vehicle_id')
         ->toArray();
 
-        // Filter kendaraan yang TIDAK sedang dipinjam
         $availableVehicles = $allVehicles->whereNotIn('id', $bookedVehicleIds)->values();
 
         return response()->json([
+            'success' => true, 
             'message' => 'Available vehicles retrieved successfully',
             'data' => $availableVehicles,
             'total' => $availableVehicles->count(),
@@ -59,13 +55,14 @@ class BookingController extends Controller
         $conflictBooking = Booking::where('vehicle_id', $request->vehicle_id)
             ->where(function ($query) use ($request) {
                 $query->where('tanggal_peminjaman', '<=', $request->tanggal_kembali)
-                      ->where('tanggal_kembali', '>=', $request->tanggal_peminjaman);
+                    ->where('tanggal_kembali', '>=', $request->tanggal_peminjaman);
             })
             ->whereIn('status_peminjaman', ['menunggu', 'disetujui'])
             ->exists();
 
         if ($conflictBooking) {
             return response()->json([
+                'success' => false, // ✅ Tambahkan
                 'message' => 'Kendaraan sudah dipinjam pada tanggal tersebut. Pilih kendaraan atau tanggal lain.',
             ], 409);
         }
@@ -82,8 +79,9 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
+            'success' => true, // ✅ Tambahkan
             'message' => 'Peminjaman berhasil diajukan',
-            'data' => $booking,
+            'data' => $booking->load('vehicle'),
         ], 201);
     }
 
@@ -97,23 +95,61 @@ class BookingController extends Controller
 
         if ($bookings->isEmpty()) {
             return response()->json([
+                'success' => false, // ✅ Tambahkan
                 'message' => 'Tidak ada peminjaman ditemukan untuk NRP ini',
                 'data' => [],
             ], 404);
         }
 
         return response()->json([
+            'success' => true, // ✅ Tambahkan
             'data' => $bookings,
+            'total' => $bookings->count(),
         ], 200);
     }
 
+
     // 3. List semua bookings (untuk testing/admin)
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = Booking::with('vehicle')->orderBy('created_at', 'desc')->get();
+        $query = Booking::with('vehicle');
+
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status_peminjaman', $request->status);
+        }
+
+        // Search by nama, unit_kerja, or nrp
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('unit_kerja', 'like', "%{$search}%")
+                  ->orWhere('nrp', 'like', "%{$search}%");
+            });
+        }
+
+        $bookings = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
+            'success' => true,
             'data' => $bookings,
+            'total' => $bookings->count(),
+        ], 200);
+    }
+
+    public function getPendingBookings()
+    {
+        $bookings = Booking::where('status_peminjaman', 'menunggu')
+            ->with('vehicle')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pending bookings retrieved successfully',
+            'data' => $bookings,
+            'total' => $bookings->count(),
         ], 200);
     }
 
@@ -126,9 +162,12 @@ class BookingController extends Controller
             ->get();
 
         return response()->json([
+            'success' => true, // ✅ Tambahkan
             'data' => $bookings,
+            'total' => $bookings->count(),
         ], 200);
     }
+
 
     // 5. Get jadwal berdasarkan vehicle_id (untuk kalender per kendaraan)
     public function getBookingsByVehicle($vehicleId)
@@ -140,7 +179,9 @@ class BookingController extends Controller
             ->get();
 
         return response()->json([
+            'success' => true, // ✅ Tambahkan
             'data' => $bookings,
+            'total' => $bookings->count(),
         ], 200);
     }
 
@@ -156,11 +197,11 @@ class BookingController extends Controller
         $query = Booking::where('status_peminjaman', 'disetujui')
             ->where(function($q) use ($request) {
                 $q->whereBetween('tanggal_peminjaman', [$request->start_date, $request->end_date])
-                  ->orWhereBetween('tanggal_kembali', [$request->start_date, $request->end_date])
-                  ->orWhere(function($q2) use ($request) {
-                      $q2->where('tanggal_peminjaman', '<=', $request->start_date)
-                         ->where('tanggal_kembali', '>=', $request->end_date);
-                  });
+                ->orWhereBetween('tanggal_kembali', [$request->start_date, $request->end_date])
+                ->orWhere(function($q2) use ($request) {
+                    $q2->where('tanggal_peminjaman', '<=', $request->start_date)
+                        ->where('tanggal_kembali', '>=', $request->end_date);
+                });
             })
             ->with('vehicle');
 
@@ -171,65 +212,67 @@ class BookingController extends Controller
         $bookings = $query->orderBy('tanggal_peminjaman', 'asc')->get();
 
         return response()->json([
+            'success' => true, // ✅ Tambahkan
             'data' => $bookings,
+            'total' => $bookings->count(),
         ], 200);
     }
 
     // 7. Approve booking (untuk admin - nanti)
     public function approve($id)
     {
-        // $booking = Booking::findOrFail($id);
-        // $booking->status_peminjaman = 'disetujui';
-        // $booking->save();
+        try {
+            $booking = Booking::findOrFail($id);
+            
+            if ($booking->status_peminjaman !== 'menunggu') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya booking dengan status menunggu yang bisa disetujui',
+                ], 400);
+            }
 
-        // return response()->json([
-        //     'message' => 'Peminjaman berhasil disetujui',
-        //     'data' => $booking,
-        // ], 200);
+            $booking->update(['status_peminjaman' => 'disetujui']);
 
-        $booking = Booking::findOrFail($id);
-        
-        if ($booking->status_peminjaman !== 'menunggu') {
             return response()->json([
-                'message' => 'Hanya booking dengan status menunggu yang bisa disetujui',
-            ], 400);
+                'success' => true,
+                'message' => 'Peminjaman berhasil disetujui',
+                'data' => $booking->load('vehicle'),
+            ], 200);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan',
+            ], 404);
         }
-
-        $booking->status_peminjaman = 'disetujui';
-        $booking->save();
-
-        return response()->json([
-            'message' => 'Peminjaman berhasil disetujui',
-            'data' => $booking,
-        ], 200);
     }
 
     // 8. Reject booking (untuk admin - nanti)
     public function reject($id)
     {
-        // $booking = Booking::findOrFail($id);
-        // $booking->status_peminjaman = 'ditolak';
-        // $booking->save();
+        try {
+            $booking = Booking::findOrFail($id);
+            
+            if ($booking->status_peminjaman !== 'menunggu') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya booking dengan status menunggu yang bisa ditolak',
+                ], 400);
+            }
 
-        // return response()->json([
-        //     'message' => 'Peminjaman ditolak',
-        //     'data' => $booking,
-        // ], 200);
+            $booking->update(['status_peminjaman' => 'ditolak']);
 
-        $booking = Booking::findOrFail($id);
-        
-        if ($booking->status_peminjaman !== 'menunggu') {
             return response()->json([
-                'message' => 'Hanya booking dengan status menunggu yang bisa ditolak',
-            ], 400);
+                'success' => true,
+                'message' => 'Peminjaman ditolak',
+                'data' => $booking->load('vehicle'),
+            ], 200);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan',
+            ], 404);
         }
-
-        $booking->status_peminjaman = 'ditolak';
-        $booking->save();
-
-        return response()->json([
-            'message' => 'Peminjaman ditolak',
-            'data' => $booking,
-        ], 200);
     }
 }

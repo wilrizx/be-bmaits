@@ -16,25 +16,11 @@ class VehicleController extends Controller
     {
         $vehicles = Vehicle::orderBy('nama_kendaraan', 'asc')->get();
 
-        // Transform data agar sesuai dengan format frontend
-        $vehicles = $vehicles->map(function ($vehicle) {
-            return [
-                'id' => $vehicle->id,
-                'nama' => $vehicle->nama_kendaraan,
-                'jenis' => $vehicle->jenis_kendaraan,
-                'warna' => $vehicle->warna_kendaraan,
-                'plate' => $vehicle->nomor_polisi,
-                'bbm' => $vehicle->bahan_bakar,
-                'kapasitas' => $vehicle->kapasitas_penumpang . ' Orang',
-                'status' => $vehicle->status_ketersediaan,
-            ];
-        });
-
         return response()->json([
+            'success' => true,
             'data' => $vehicles,
+            'total' => $vehicles->count(),
         ], 200);
-
-        //
     }
 
     /**
@@ -43,36 +29,44 @@ class VehicleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'jenis' => 'required|string|max:100',
-            'warna' => 'required|string|max:50',
-            'plate' => 'required|string|max:20|unique:vehicles,plate',
-            'bbm' => 'required|string|max:50',
-            'kapasitas' => 'required|string|max:50',
-            'status' => 'required|in:available,borrowed,maintenance',
+            'nama_kendaraan' => 'required|string|max:255',
+            'jenis_kendaraan' => 'required|string|max:100',
+            'warna_kendaraan' => 'required|string|max:50',
+            'nomor_polisi' => 'required|string|max:20|unique:vehicles,nomor_polisi',
+            'bahan_bakar' => 'required|string|max:50',
+            'kapasitas_penumpang' => 'required|integer|min:1',
+            'status_ketersediaan' => 'required|in:tersedia,dipinjam,maintenance',
         ]);
 
-        $vehicle = Booking::create($request->all());
+        $vehicle = Vehicle::create($request->all());
 
         return response()->json([
+            'success' => true,
             'message' => 'Vehicle created successfully',
             'data' => $vehicle,
         ], 201);
-
-        //
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
+        try {
+            $vehicle = Vehicle::findOrFail($id);
 
-        return response()->json([
-            'data' => $vehicle,
-        ], 200);
-        //
+            return response()->json([
+                'success' => true,
+                'data' => $vehicle,
+            ], 200);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vehicle not found',
+            ], 404);
+        }
     }
 
     /**
@@ -80,25 +74,34 @@ class VehicleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
+        try {
+            $vehicle = Vehicle::findOrFail($id);
 
-        $request->validate([
-            'nama' => 'sometimes|string|max:255',
-            'jenis' => 'sometimes|string|max:100',
-            'warna' => 'sometimes|string|max:50',
-            'plate' => 'sometimes|string|max:20|unique:vehicles,plate,' . $id,
-            'bbm' => 'sometimes|string|max:50',
-            'kapasitas' => 'sometimes|string|max:50',
-            'status' => 'sometimes|in:available,borrowed,maintenance',
-        ]);
+            // ✅ FIX: Gunakan nama field yang sesuai database
+            $request->validate([
+                'nama_kendaraan' => 'sometimes|string|max:255',
+                'jenis_kendaraan' => 'sometimes|string|max:100',
+                'warna_kendaraan' => 'sometimes|string|max:50',
+                'nomor_polisi' => 'sometimes|string|max:20|unique:vehicles,nomor_polisi,' . $id,
+                'bahan_bakar' => 'sometimes|string|max:50',
+                'kapasitas_penumpang' => 'sometimes|integer|min:1',
+                'status_ketersediaan' => 'sometimes|in:tersedia,dipinjam,maintenance',
+            ]);
 
-        $vehicle->update($request->all());
+            $vehicle->update($request->all());
 
-        return response()->json([
-            'message' => 'Vehicle updated successfully',
-            'data' => $vehicle,
-        ], 200);
-        //
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehicle updated successfully',
+                'data' => $vehicle,
+            ], 200);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vehicle not found',
+            ], 404);
+        }
     }
 
     /**
@@ -106,12 +109,33 @@ class VehicleController extends Controller
      */
     public function destroy(string $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-        $vehicle->delete();
+        try {
+            $vehicle = Vehicle::findOrFail($id);
+            
+            // ✅ Optional: Cek apakah ada booking aktif untuk kendaraan ini
+            $activeBookings = $vehicle->bookings()
+                ->whereIn('status_peminjaman', ['menunggu', 'disetujui'])
+                ->exists();
+            
+            if ($activeBookings) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete vehicle with active bookings',
+                ], 400);
+            }
 
-        return response()->json([
-            'message' => 'Vehicle deleted successfully',
-        ], 200);
-        //
+            $vehicle->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehicle deleted successfully',
+            ], 200);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vehicle not found',
+            ], 404);
+        }
     }
 }
