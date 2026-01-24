@@ -9,6 +9,8 @@ class Booking extends Model
 {
     use HasFactory;
 
+    protected $table = 'booking';
+
     protected $fillable = [
         'nama',
         'nrp',
@@ -23,7 +25,7 @@ class Booking extends Model
     protected $casts = [
         'nrp' => 'integer',
         'vehicle_id' => 'integer',
-        'tanggal_peminjaman' => 'date',
+        'tanggal_pinjam' => 'date',
         'tanggal_kembali' => 'date',
     ];
 
