@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'admin',
         ],
+
+        'api' => [
+            'driver'=> 'sanctum',
+        ]
     ],
 
     /*

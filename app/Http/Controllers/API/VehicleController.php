@@ -32,7 +32,7 @@ class VehicleController extends Controller
             'nama_kendaraan' => 'required|string|max:255',
             'jenis_kendaraan' => 'required|string|max:100',
             'warna_kendaraan' => 'required|string|max:50',
-            'nomor_polisi' => 'required|string|max:20|unique:vehicles,nomor_polisi',
+            'nomor_polisi' => 'required|string|max:20|unique:vehicle,nomor_polisi',
             'bahan_bakar' => 'required|string|max:50',
             'kapasitas_penumpang' => 'required|integer|min:1',
             'status_ketersediaan' => 'required|in:tersedia,dipinjam,maintenance',
@@ -82,7 +82,7 @@ class VehicleController extends Controller
                 'nama_kendaraan' => 'sometimes|string|max:255',
                 'jenis_kendaraan' => 'sometimes|string|max:100',
                 'warna_kendaraan' => 'sometimes|string|max:50',
-                'nomor_polisi' => 'sometimes|string|max:20|unique:vehicles,nomor_polisi,' . $id,
+                'nomor_polisi' => 'sometimes|string|max:20|unique:vehicle,nomor_polisi,' . $id,
                 'bahan_bakar' => 'sometimes|string|max:50',
                 'kapasitas_penumpang' => 'sometimes|integer|min:1',
                 'status_ketersediaan' => 'sometimes|in:tersedia,dipinjam,maintenance',
@@ -114,7 +114,7 @@ class VehicleController extends Controller
             
             // ✅ Optional: Cek apakah ada booking aktif untuk kendaraan ini
             $activeBookings = $vehicle->bookings()
-                ->whereIn('status_peminjaman', ['menunggu', 'disetujui'])
+                ->whereIn('status_booking', ['menunggu', 'disetujui'])
                 ->exists();
             
             if ($activeBookings) {

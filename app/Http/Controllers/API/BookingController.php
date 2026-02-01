@@ -13,7 +13,7 @@ class BookingController extends Controller
     {
         $request->validate([
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
-            'tanggal_kembali' => 'required|date|after:tanggal_pinjam',
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
         ]);
 
         $tanggalPinjam = $request->tanggal_pinjam;
@@ -25,7 +25,7 @@ class BookingController extends Controller
             $query->where('tanggal_pinjam', '<=', $tanggalKembali)
                 ->where('tanggal_kembali', '>=', $tanggalPinjam);
         })
-        ->whereIn('status_pinjam', ['menunggu', 'disetujui'])
+        ->whereIn('status_booking', ['menunggu', 'disetujui'])
         ->pluck('vehicle_id')
         ->toArray();
 
@@ -48,7 +48,7 @@ class BookingController extends Controller
             'unit_kerja' => 'required|string|max:255',
             'vehicle_id' => 'required|integer|exists:vehicle,id', 
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
-            'tanggal_kembali' => 'required|date|after:tanggal_pinjam', 
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam', 
             'keperluan' => 'required|string|max:1000',
         ]);
 
@@ -57,7 +57,7 @@ class BookingController extends Controller
                 $query->where('tanggal_pinjam', '<=', $request->tanggal_kembali)
                     ->where('tanggal_kembali', '>=', $request->tanggal_pinjam);
             })
-            ->whereIn('status_pengajuan', ['menunggu', 'disetujui'])
+            ->whereIn('status_booking', ['menunggu', 'disetujui'])
             ->exists();
 
         if ($conflictBooking) {
@@ -75,7 +75,7 @@ class BookingController extends Controller
             'tanggal_pinjam' => $request->tanggal_pinjam,
             'tanggal_kembali' => $request->tanggal_kembali,
             'keperluan' => $request->keperluan,
-            'status_pengajuan' => 'menunggu',
+            'status_booking' => 'menunggu',
         ]);
 
         return response()->json([
@@ -116,7 +116,7 @@ class BookingController extends Controller
 
         // Filter by status
         if ($request->has('status')) {
-            $query->where('status_pinjam', $request->status);
+            $query->where('status_booking', $request->status);
         }
 
         // Search by nama, unit_kerja, or nrp
@@ -140,7 +140,7 @@ class BookingController extends Controller
 
     public function getPendingBookings()
     {
-        $bookings = Booking::where('status_peminjaman', 'menunggu')
+        $bookings = Booking::where('status_booking', 'menunggu')
             ->with('vehicle')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -156,7 +156,7 @@ class BookingController extends Controller
     // 4. Get jadwal kendaraan yang sudah disetujui (untuk kalender)
     public function getApprovedBookings()
     {
-        $bookings = Booking::where('status_pengajuan', 'disetujui') // ✅ Gunakan 'status_pengajuan'
+        $bookings = Booking::where('status_booking', 'disetujui') // ✅ Gunakan 'status_pengajuan'
             ->with('vehicle')
             ->orderBy('tanggal_pinjam', 'asc')
             ->get();
@@ -173,7 +173,7 @@ class BookingController extends Controller
     public function getBookingsByVehicle($vehicleId)
     {
         $bookings = Booking::where('vehicle_id', $vehicleId)
-            ->whereIn('status_pinjam', ['disetujui', 'menunggu'])
+            ->whereIn('status_booking', ['disetujui', 'menunggu'])
             ->with('vehicle')
             ->orderBy('tanggal_pinjam', 'asc')
             ->get();
@@ -194,7 +194,7 @@ class BookingController extends Controller
             'vehicle_id' => 'nullable|integer',
         ]);
 
-        $query = Booking::where('status_pinjam', 'disetujui')
+        $query = Booking::where('status_booking', 'disetujui')
             ->where(function($q) use ($request) {
                 $q->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date])
                 ->orWhereBetween('tanggal_kembali', [$request->start_date, $request->end_date])
@@ -224,14 +224,14 @@ class BookingController extends Controller
         try {
             $booking = Booking::findOrFail($id);
             
-            if ($booking->status_pinjam !== 'menunggu') {
+            if ($booking->status_booking !== 'menunggu') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Hanya booking dengan status menunggu yang bisa disetujui',
                 ], 400);
             }
 
-            $booking->update(['status_pinjam' => 'disetujui']);
+            $booking->update(['status_booking' => 'disetujui']);
 
             return response()->json([
                 'success' => true,
@@ -253,14 +253,14 @@ class BookingController extends Controller
         try {
             $booking = Booking::findOrFail($id);
             
-            if ($booking->status_pinjam !== 'menunggu') {
+            if ($booking->status_booking !== 'menunggu') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Hanya booking dengan status menunggu yang bisa ditolak',
                 ], 400);
             }
 
-            $booking->update(['status_pinjam' => 'ditolak']);
+            $booking->update(['status_booking' => 'ditolak']);
 
             return response()->json([
                 'success' => true,
