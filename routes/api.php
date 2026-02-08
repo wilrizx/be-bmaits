@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\VehicleController;
+use App\Http\Controllers\API\UnitKerjaController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -52,5 +53,11 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [VehicleController::class, 'update']);
             Route::delete('/{id}', [VehicleController::class, 'destroy']);
         });
+    });
+});
+
+Route::prefix('v1')->group(function () {
+    Route::prefix('unit-kerja')->group(function () {
+        Route::get('/', [UnitKerjaController::class, 'index']);
     });
 });

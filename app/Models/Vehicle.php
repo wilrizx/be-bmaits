@@ -57,5 +57,10 @@ class Vehicle extends Model
     {
         return $query->where('status_ketersediaan', 'maintenance');
     }
+
+    public function unitKerja()
+    {
+        return $this->belongsTo(UnitKerja::class);
+    }
     //
 }

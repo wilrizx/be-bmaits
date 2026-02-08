@@ -14,12 +14,12 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        $vehicles = Vehicle::orderBy('nama_kendaraan', 'asc')->get();
+        $vehicle = Vehicle::orderBy('nama_kendaraan', 'asc')->get();
 
         return response()->json([
             'success' => true,
-            'data' => $vehicles,
-            'total' => $vehicles->count(),
+            'data' => $vehicle,
+            'total' => $vehicle->count(),
         ], 200);
     }
 
@@ -103,6 +103,33 @@ class VehicleController extends Controller
             ], 404);
         }
     }
+
+    public function available(Request $request)
+    {
+        $request->validate([
+            'tanggal_pinjam' => 'required|date',
+            'tanggal_kembali' => 'required|date|after:tanggal_pinjam',
+            'unit_kerja_id' => 'required|exists:unit_kerja,id',
+        ]);
+
+        $vehicle = Vehicle::where('unit_kerja_id', $request->unit_kerja_id)
+            ->where('status_ketersediaan', 'tersedia')
+            ->whereDoesntHave('bookings', function ($q) use ($request) {
+                $q->where(function ($query) use ($request) {
+                    $query->whereBetween('tanggal_pinjam', [
+                        $request->tanggal_pinjam,
+                        $request->tanggal_kembali
+                    ]);
+                });
+            })
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $vehicle
+        ]);
+    }
+
 
     /**
      * Remove the specified resource from storage.
