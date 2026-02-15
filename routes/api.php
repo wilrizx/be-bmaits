@@ -56,8 +56,10 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-Route::prefix('v1')->group(function () {
-    Route::prefix('unit-kerja')->group(function () {
-        Route::get('/', [UnitKerjaController::class, 'index']);
-    });
-});
+// Route::prefix('v1')->group(function () {
+//     Route::prefix('unit-kerja')->group(function () {
+//         Route::get('/', [UnitKerjaController::class, 'index']);
+//     });
+// });
+
+Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);

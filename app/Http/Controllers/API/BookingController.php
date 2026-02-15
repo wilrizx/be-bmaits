@@ -275,4 +275,10 @@ class BookingController extends Controller
             ], 404);
         }
     }
+    
+    public function show($id)
+    {
+        $booking = Booking::with('vehicle')->findOrFail($id);
+        return response()->json($booking);
+    }
 }

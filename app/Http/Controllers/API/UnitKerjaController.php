@@ -10,7 +10,8 @@ class UnitKerjaController extends Controller
 {
     public function index()
     {   
-        return UnitKerja::orderBy('kategori')->get();
+        // return UnitKerja::orderBy('kategori')->get();
+        return response()->json(UnitKerja::all());
     }
     //
 }
