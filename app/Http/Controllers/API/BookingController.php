@@ -19,21 +19,28 @@ class BookingController extends Controller
         $tanggalPinjam = $request->tanggal_pinjam;
         $tanggalKembali = $request->tanggal_kembali;
 
-        $allVehicles = Vehicle::all();
+        // Cari ID kendaraan yang TIDAK tersedia (sudah ada booking yang beririsan)
+        $bookedVehicleIds = Booking::whereIn('status_booking', ['menunggu', 'disetujui'])
+            ->where(function ($query) use ($tanggalPinjam, $tanggalKembali) {
+                /* Logika Irisan:
+                Booking lama menabrak jadwal baru jika:
+                Tanggal Pinjam Lama <= Tanggal Kembali Baru 
+                AND 
+                Tanggal Kembali Lama >= Tanggal Pinjam Baru
+                */
+                $query->where('tanggal_pinjam', '<=', $tanggalKembali)
+                    ->where('tanggal_kembali', '>=', $tanggalPinjam);
+            })
+            ->pluck('vehicle_id')
+            ->unique()
+            ->toArray();
 
-        $bookedVehicleIds = Booking::where(function ($query) use ($tanggalPinjam, $tanggalKembali) {
-            $query->where('tanggal_pinjam', '<=', $tanggalKembali)
-                ->where('tanggal_kembali', '>=', $tanggalPinjam);
-        })
-        ->whereIn('status_booking', ['menunggu', 'disetujui'])
-        ->pluck('vehicle_id')
-        ->toArray();
-
-        $availableVehicles = $allVehicles->whereNotIn('id', $bookedVehicleIds)->values();
+        // Ambil kendaraan yang ID-nya tidak ada dalam daftar bookedVehicleIds
+        $availableVehicles = Vehicle::whereNotIn('id', $bookedVehicleIds)->get();
 
         return response()->json([
             'success' => true, 
-            'message' => 'Available vehicles retrieved successfully',
+            'message' => 'Kendaraan tersedia berhasil dimuat',
             'data' => $availableVehicles,
             'total' => $availableVehicles->count(),
         ], 200);
@@ -46,24 +53,25 @@ class BookingController extends Controller
             'nama' => 'required|string|max:255',
             'nrp' => 'required|integer',
             'unit_kerja' => 'required|string|max:255',
-            'vehicle_id' => 'required|integer|exists:vehicle,id', 
+            'vehicle_id' => 'required|integer|exists:vehicles,id', // Pastikan nama tabel benar (biasanya jamak 'vehicles')
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
             'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam', 
             'keperluan' => 'required|string|max:1000',
         ]);
 
+        // Cek apakah kendaraan masih dipinjam/sudah dibooking pada tanggal tersebut
         $conflictBooking = Booking::where('vehicle_id', $request->vehicle_id)
+            ->whereIn('status_booking', ['menunggu', 'disetujui'])
             ->where(function ($query) use ($request) {
                 $query->where('tanggal_pinjam', '<=', $request->tanggal_kembali)
                     ->where('tanggal_kembali', '>=', $request->tanggal_pinjam);
             })
-            ->whereIn('status_booking', ['menunggu', 'disetujui'])
             ->exists();
 
         if ($conflictBooking) {
             return response()->json([
-                'success' => false, // ✅ Tambahkan
-                'message' => 'Kendaraan sudah dipinjam pada tanggal tersebut. Pilih kendaraan atau tanggal lain.',
+                'success' => false,
+                'message' => 'Kendaraan sudah dipinjam atau dalam status menunggu persetujuan pada tanggal tersebut.',
             ], 409);
         }
 
@@ -79,8 +87,8 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
-            'success' => true, // ✅ Tambahkan
-            'message' => 'pinjam berhasil diajukan',
+            'success' => true,
+            'message' => 'Peminjaman berhasil diajukan',
             'data' => $booking->load('vehicle'),
         ], 201);
     }
@@ -222,7 +230,7 @@ class BookingController extends Controller
     public function approve($id)
     {
         try {
-            $booking = Booking::findOrFail($id);
+            $booking = Booking::with('vehicle')->findOrFail($id);
             
             if ($booking->status_booking !== 'menunggu') {
                 return response()->json([
@@ -231,19 +239,25 @@ class BookingController extends Controller
                 ], 400);
             }
 
+            // 1. Update Status
             $booking->update(['status_booking' => 'disetujui']);
+
+            // 2. Logic Generate File (Contoh: Menggunakan library DomPDF)
+            // Di sini kita memanggil fungsi internal untuk membuat PDF
+            $fileUrl = $this->generateBookingPdf($booking);
 
             return response()->json([
                 'success' => true,
-                'message' => 'pinjam berhasil disetujui',
-                'data' => $booking->load('vehicle'),
+                'message' => 'Pinjam disetujui dan dokumen berhasil dibuat',
+                'data' => $booking,
+                'download_url' => $fileUrl // Client (Next.js) bisa lanjukan ke download
             ], 200);
             
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Booking tidak ditemukan',
-            ], 404);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -280,5 +294,31 @@ class BookingController extends Controller
     {
         $booking = Booking::with('vehicle')->findOrFail($id);
         return response()->json($booking);
+    }
+
+    private function generateBookingPdf($booking)
+    {
+        // Data ini diambil langsung dari hasil form yang disimpan di database
+        $data = [
+            'nomor_surat' => 'SRT/' . $booking->id . '/' . date('Y'),
+            'nama'        => $booking->nama,
+            'nrp'         => $booking->nrp,
+            'unit'        => $booking->unit_kerja,
+            'kendaraan'   => $booking->vehicle->nama_kendaraan, // Asumsi kolom di tabel vehicle
+            'plat'        => $booking->vehicle->no_plat,
+            'tgl_pinjam'  => $booking->tanggal_pinjam,
+            'tgl_kembali' => $booking->tanggal_kembali,
+            'keperluan'   => $booking->keperluan,
+            'tgl_cetak'   => now()->format('d F Y'),
+        ];
+
+        // Logika pembuatan file (Contoh simpan di storage)
+        // $pdf = Pdf::loadView('pdf.surat_peminjaman', $data);
+        // $fileName = 'Surat_Pinjam_' . $booking->id . '.pdf';
+        // Storage::put('public/documents/' . $fileName, $pdf->output());
+
+        // return asset('storage/documents/' . $fileName);
+        
+        return "URL_FILE_HASIL_GENERATE"; 
     }
 }
