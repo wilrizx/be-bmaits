@@ -290,10 +290,29 @@ class BookingController extends Controller
         }
     }
     
+    // public function show($id)
+    // {
+    //     $booking = Booking::with('vehicle')->findOrFail($id);
+    //     return response()->json($booking);
+    // }
+
     public function show($id)
     {
-        $booking = Booking::with('vehicle')->findOrFail($id);
-        return response()->json($booking);
+        try {
+            // Mengambil data booking beserta detail kendaraannya
+            $booking = Booking::with('vehicle')->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail peminjaman berhasil diambil',
+                'data' => $booking
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
     }
 
     private function generateBookingPdf($booking)

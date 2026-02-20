@@ -7,14 +7,12 @@ use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\VehicleController;
 use App\Http\Controllers\API\UnitKerjaController;
 
-// Grouping utama V1
 Route::prefix('v1')->group(function () {
 
     // --- AUTH ADMIN ---
     Route::prefix('adminbma')->group(function () {
         Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
         
-        // Route yang butuh Login
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/me', [LoginController::class, 'me']);
             Route::delete('/logout', [LoginController::class, 'destroy']);
@@ -23,15 +21,19 @@ Route::prefix('v1')->group(function () {
 
     // --- BOOKING ---
     Route::prefix('booking')->group(function () {
-        // Public Access
+        // --- Public Access (Tanpa Login) ---
         Route::get('/available-vehicles', [BookingController::class, 'getAvailableVehicles']);
         Route::post('/', [BookingController::class, 'store'])->middleware('throttle:10,1');
         Route::get('/check/{nrp}', [BookingController::class, 'checkByNrp']);
-        Route::get('/approved', [BookingController::class, 'getApprovedBookings']);
-        Route::get('/vehicle/{vehicleId}', [BookingController::class, 'getBookingsByVehicle']);
-        Route::get('/schedule', [BookingController::class, 'getBookingsByDateRange']);
         
-        // Admin Protected Access
+        // Route Kunci untuk E-Surat: FE butuh ambil detail data untuk di-render ke PDF
+        Route::get('/detail/{id}', [BookingController::class, 'show']); 
+
+        Route::get('/approved-list', [BookingController::class, 'getApprovedBookings']);
+        Route::get('/schedule/vehicle/{vehicleId}', [BookingController::class, 'getBookingsByVehicle']);
+        Route::get('/schedule/range', [BookingController::class, 'getBookingsByDateRange']);
+        
+        // --- Admin Protected Access (Butuh Login) ---
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [BookingController::class, 'index']);
             Route::get('/pending', [BookingController::class, 'getPendingBookings']);
@@ -40,19 +42,14 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // --- VEHICLES ---
-    Route::prefix('vehicles')->group(function () {
-        Route::get('/', [VehicleController::class, 'index']);
-        Route::get('/{id}', [VehicleController::class, 'show']);
-        
-        // Admin Protected Access
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::post('/', [VehicleController::class, 'store']);
-            Route::put('/{id}', [VehicleController::class, 'update']);
-            Route::delete('/{id}', [VehicleController::class, 'destroy']);
-        });
-    });
+    // --- VEHICLES & UNIT KERJA ---
+    Route::get('/vehicles', [VehicleController::class, 'index']);
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
+    Route::get('/unit-kerja', [UnitKerjaController::class, 'index']); // Diperlukan Form Publik
 
-    // --- UNIT KERJA ---
-    Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/vehicles', [VehicleController::class, 'store']);
+        Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+        Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+    });
 });
