@@ -340,4 +340,23 @@ class BookingController extends Controller
         
         return "URL_FILE_HASIL_GENERATE"; 
     }
+
+    public function getCalendarEvents()
+    {
+        $bookings = Booking::where('status_booking', 'disetujui')
+            ->with('vehicle')
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'title' => $booking->vehicle->nama_kendaraan . 
+                            ' - ' . $booking->unit_kerja,
+                    'start' => $booking->tanggal_pinjam,
+                    'end'   => date('Y-m-d', strtotime($booking->tanggal_kembali . ' +1 day')),
+                    'vehicle_id' => $booking->vehicle_id,
+                ];
+            });
+
+        return response()->json($bookings);
+    }
 }

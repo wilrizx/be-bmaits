@@ -47,6 +47,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
     Route::get('/unit-kerja', [UnitKerjaController::class, 'index']); // Diperlukan Form Publik
 
+    // Route kalender
+    Route::get('/calendar', [BookingController::class, 'getCalendarEvents']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vehicles', [VehicleController::class, 'store']);
         Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
