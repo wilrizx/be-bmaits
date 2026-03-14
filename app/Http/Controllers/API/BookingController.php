@@ -53,7 +53,7 @@ class BookingController extends Controller
             'nama' => 'required|string|max:255',
             'nrp' => 'required|integer',
             'unit_kerja' => 'required|string|max:255',
-            'vehicle_id' => 'required|integer|exists:vehicles,id', // Pastikan nama tabel benar (biasanya jamak 'vehicles')
+            'vehicle_id' => 'required|integer|exists:vehicle,id', // Pastikan nama tabel benar (biasanya jamak 'vehicles')
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
             'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam', 
             'keperluan' => 'required|string|max:1000',
