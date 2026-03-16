@@ -3,11 +3,45 @@
 namespace App\Http\Controllers\API\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => 'required|email',
+    //         'password' => 'required|string|min:6',
+    //     ]);
+
+    //     if (Auth::attempt($request->only('email', 'password'))) {
+    //         $user = Auth::user();
+            
+    //         $user->tokens()->delete();
+            
+    //         $token = $user->createToken('auth_token')->plainTextToken;
+
+    //         return response()->json([
+    //             'message' => 'Login successful',
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'email' => $user->email,
+    //             ],
+    //             'access_token' => $token,
+    //             'token_type' => 'Bearer',
+    //         ], 200)
+    //         ->header('Access-Control-Allow-Origin', 'http://localhost:3000');
+
+    //     }
+
+    //     return response()->json([
+    //         'message' => 'The provided credentials are incorrect.',
+    //     ], 401);
+    // }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -15,29 +49,31 @@ class LoginController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
-            $user = Auth::guard('web')->user();
-            
-            $user->tokens()->delete();
-            
-            $token = $user->createToken('auth_token')->plainTextToken;
+        $user = User::where('email', $request->email)->first();
 
+        // Validasi user & password secara manual (lebih cepat untuk API stateless)
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Login successful',
-                'user' => [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                ],
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ], 200)
-            ->header('Access-Control-Allow-Origin', 'http://localhost:3000');
-
+                'message' => 'The provided credentials are incorrect.',
+            ], 401);
         }
 
+        // Hapus token lama agar satu user hanya punya satu session aktif (Opsional)
+        $user->tokens()->delete();
+        
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
-            'message' => 'The provided credentials are incorrect.',
-        ], 401);
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $user->id,
+                // 'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ], 200);
+        // Header CORS dibuang, atur di config/cors.php saja!
     }
 
     public function me(Request $request)
