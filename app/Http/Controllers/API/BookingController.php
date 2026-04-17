@@ -103,14 +103,14 @@ class BookingController extends Controller
 
         if ($bookings->isEmpty()) {
             return response()->json([
-                'success' => false, // ✅ Tambahkan
+                'success' => false, 
                 'message' => 'Tidak ada pinjam ditemukan untuk NRP ini',
                 'data' => [],
             ], 404);
         }
 
         return response()->json([
-            'success' => true, // ✅ Tambahkan
+            'success' => true, 
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -164,13 +164,13 @@ class BookingController extends Controller
     // 4. Get jadwal kendaraan yang sudah disetujui (untuk kalender)
     public function getApprovedBookings()
     {
-        $bookings = Booking::where('status_booking', 'disetujui') // ✅ Gunakan 'status_pengajuan'
+        $bookings = Booking::where('status_booking', 'disetujui') //
             ->with('vehicle')
             ->orderBy('tanggal_pinjam', 'asc')
             ->get();
 
         return response()->json([
-            'success' => true, // ✅ Tambahkan
+            'success' => true, 
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -187,7 +187,7 @@ class BookingController extends Controller
             ->get();
 
         return response()->json([
-            'success' => true, // ✅ Tambahkan
+            'success' => true, 
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -220,7 +220,7 @@ class BookingController extends Controller
         $bookings = $query->orderBy('tanggal_pinjam', 'asc')->get();
 
         return response()->json([
-            'success' => true, // ✅ Tambahkan
+            'success' => true, 
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -323,7 +323,7 @@ class BookingController extends Controller
             'nama'        => $booking->nama,
             'nrp'         => $booking->nrp,
             'unit'        => $booking->unit_kerja,
-            'kendaraan'   => $booking->vehicle->nama_kendaraan, // Asumsi kolom di tabel vehicle
+            'kendaraan'   => $booking->vehicle->nama_kendaraan, 
             'plat'        => $booking->vehicle->no_plat,
             'tgl_pinjam'  => $booking->tanggal_pinjam,
             'tgl_kembali' => $booking->tanggal_kembali,
