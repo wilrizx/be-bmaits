@@ -24,8 +24,8 @@ class BookingController extends Controller
             ->where(function ($query) use ($tanggalPinjam, $tanggalKembali) {
                 /* Logika Irisan:
                 Booking lama menabrak jadwal baru jika:
-                Tanggal Pinjam Lama <= Tanggal Kembali Baru 
-                AND 
+                Tanggal Pinjam Lama <= Tanggal Kembali Baru
+                AND
                 Tanggal Kembali Lama >= Tanggal Pinjam Baru
                 */
                 $query->where('tanggal_pinjam', '<=', $tanggalKembali)
@@ -39,7 +39,7 @@ class BookingController extends Controller
         $availableVehicles = Vehicle::whereNotIn('id', $bookedVehicleIds)->get();
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'message' => 'Kendaraan tersedia berhasil dimuat',
             'data' => $availableVehicles,
             'total' => $availableVehicles->count(),
@@ -55,7 +55,7 @@ class BookingController extends Controller
             'unit_kerja' => 'required|string|max:255',
             'vehicle_id' => 'required|integer|exists:vehicle,id', // Pastikan nama tabel benar (biasanya jamak 'vehicles')
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
-            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam', 
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
             'keperluan' => 'required|string|max:1000',
         ]);
 
@@ -103,14 +103,14 @@ class BookingController extends Controller
 
         if ($bookings->isEmpty()) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Tidak ada pinjam ditemukan untuk NRP ini',
                 'data' => [],
             ], 404);
         }
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -170,7 +170,7 @@ class BookingController extends Controller
             ->get();
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -187,7 +187,7 @@ class BookingController extends Controller
             ->get();
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -220,7 +220,7 @@ class BookingController extends Controller
         $bookings = $query->orderBy('tanggal_pinjam', 'asc')->get();
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $bookings,
             'total' => $bookings->count(),
         ], 200);
@@ -231,7 +231,7 @@ class BookingController extends Controller
     {
         try {
             $booking = Booking::with('vehicle')->findOrFail($id);
-            
+
             if ($booking->status_booking !== 'menunggu') {
                 return response()->json([
                     'success' => false,
@@ -252,7 +252,7 @@ class BookingController extends Controller
                 'data' => $booking,
                 'download_url' => $fileUrl // Client (Next.js) bisa lanjukan ke download
             ], 200);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -266,7 +266,7 @@ class BookingController extends Controller
     {
         try {
             $booking = Booking::findOrFail($id);
-            
+
             if ($booking->status_booking !== 'menunggu') {
                 return response()->json([
                     'success' => false,
@@ -281,7 +281,7 @@ class BookingController extends Controller
                 'message' => 'pinjam ditolak',
                 'data' => $booking->load('vehicle'),
             ], 200);
-            
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
@@ -289,7 +289,7 @@ class BookingController extends Controller
             ], 404);
         }
     }
-    
+
     // public function show($id)
     // {
     //     $booking = Booking::with('vehicle')->findOrFail($id);
@@ -301,7 +301,7 @@ class BookingController extends Controller
         try {
             // Mengambil data booking beserta detail kendaraannya
             $booking = Booking::with('vehicle')->findOrFail($id);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Detail peminjaman berhasil diambil',
@@ -323,7 +323,7 @@ class BookingController extends Controller
             'nama'        => $booking->nama,
             'nrp'         => $booking->nrp,
             'unit'        => $booking->unit_kerja,
-            'kendaraan'   => $booking->vehicle->nama_kendaraan, 
+            'kendaraan'   => $booking->vehicle->nama_kendaraan,
             'plat'        => $booking->vehicle->no_plat,
             'tgl_pinjam'  => $booking->tanggal_pinjam,
             'tgl_kembali' => $booking->tanggal_kembali,
@@ -337,8 +337,8 @@ class BookingController extends Controller
         // Storage::put('public/documents/' . $fileName, $pdf->output());
 
         // return asset('storage/documents/' . $fileName);
-        
-        return "URL_FILE_HASIL_GENERATE"; 
+
+        return "URL_FILE_HASIL_GENERATE";
     }
 
     public function getCalendarEvents()
@@ -349,7 +349,7 @@ class BookingController extends Controller
             ->map(function ($booking) {
                 return [
                     'id' => $booking->id,
-                    'title' => $booking->vehicle->nama_kendaraan . 
+                    'title' => $booking->vehicle->nama_kendaraan .
                             ' - ' . $booking->unit_kerja,
                     'start' => $booking->tanggal_pinjam,
                     'end'   => date('Y-m-d', strtotime($booking->tanggal_kembali . ' +1 day')),
