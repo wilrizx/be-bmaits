@@ -12,7 +12,7 @@ Route::prefix('v1')->group(function () {
     // --- AUTH ADMIN ---
     Route::prefix('adminbma')->group(function () {
         Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
-        
+
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/me', [LoginController::class, 'me']);
             Route::delete('/logout', [LoginController::class, 'destroy']);
@@ -25,14 +25,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/available-vehicles', [BookingController::class, 'getAvailableVehicles']);
         Route::post('/', [BookingController::class, 'store'])->middleware('throttle:10,1');
         Route::get('/check/{nrp}', [BookingController::class, 'checkByNrp']);
-        
+
         // Route Kunci untuk E-Surat: FE butuh ambil detail data untuk di-render ke PDF
-        Route::get('/detail/{id}', [BookingController::class, 'show']); 
+        Route::get('/detail/{id}', [BookingController::class, 'show']);
 
         Route::get('/approved-list', [BookingController::class, 'getApprovedBookings']);
         Route::get('/schedule/vehicle/{vehicleId}', [BookingController::class, 'getBookingsByVehicle']);
         Route::get('/schedule/range', [BookingController::class, 'getBookingsByDateRange']);
-        
+
         // --- Admin Protected Access (Butuh Login) ---
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [BookingController::class, 'index']);

@@ -239,8 +239,13 @@ class BookingController extends Controller
                 ], 400);
             }
 
+            $booking = Booking::findOrFail($id);
+
             // 1. Update Status
-            $booking->update(['status_booking' => 'disetujui']);
+            $booking->update([
+                'status_booking' => 'disetujui',
+                'approved_at' => now(),
+            ]);
 
             // 2. Logic Generate File (Contoh: Menggunakan library DomPDF)
             // Di sini kita memanggil fungsi internal untuk membuat PDF
@@ -304,9 +309,23 @@ class BookingController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Detail peminjaman berhasil diambil',
-                'data' => $booking
-            ], 200);
+                // 'message' => 'Detail peminjaman berhasil diambil',
+                // 'data' => $booking
+                'data' => [
+                    'id' => $booking->id,
+                    'nama_kendaraan' => $booking->vehicle->nama_kendaraan,
+                    'nomor_polisi' => $booking->vehicle->nomor_polisi,
+                    'peminjam' => $booking->nama,
+                    'status' => $booking->status_booking,
+                    'timeline' => [
+                        'diajukan' => $booking->created_at->format('d M Y'),
+                        'ditinjau' => $booking->reviewed_at ? $booking->reviewed_at->format('d M Y') : $booking->created_at->format('d M Y'),
+                        'disetujui' => $booking->approved_at ? $booking->approved_at->format('d M Y') : null,
+                        'ditolak' => $booking->rejected_at ? $booking->rejected_at->format('d M Y') : null,
+                    ],
+                    'download_url' => $booking->status_booking === 'disetujui' ? "url_pdf_disini" : null
+                ]
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
