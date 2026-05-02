@@ -34,12 +34,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/schedule/range', [BookingController::class, 'getBookingsByDateRange']);
 
         // --- Admin Protected Access (Butuh Login) ---
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('/', [BookingController::class, 'index']);
-            Route::get('/pending', [BookingController::class, 'getPendingBookings']);
-            Route::patch('/{id}/approve', [BookingController::class, 'approve']);
-            Route::patch('/{id}/reject', [BookingController::class, 'reject']);
-        });
+        // Route::middleware('auth:sanctum')->group(function () {
+
+        // });
+
+        Route::get('/', [BookingController::class, 'index']);
+        Route::get('/pending', [BookingController::class, 'getPendingBookings']);
+        Route::patch('/{id}/approve', [BookingController::class, 'approve']);
+        Route::patch('/{id}/reject', [BookingController::class, 'reject']);
     });
 
     // --- VEHICLES & UNIT KERJA ---
